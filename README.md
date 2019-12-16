@@ -12,7 +12,7 @@
 json format body with this key
 * title : build work identifier
 * url : github repository url
-* token : access token for github repository
+* token(optional) : access token for github repository
 * branch : branch name for target
 
 ## /hook/<repo_title>

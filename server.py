@@ -60,8 +60,8 @@ def update_repo(title):
 def build(title):
     repo = repo_data.get(title)
 
-    os.system(f"git clone https://{repo['token']}@github.com/{repo['owner']}/{repo['name']} -b {repo['branch']} --single-branch")
-    os.system(f"docker build -t {title}:{repo['version']} -f {repo['name']}")
+    os.system(f"git clone https://{repo['token']}{'@' if repo['token'] != '' else ''}github.com/{repo['owner']}/{repo['name']} -b {repo['branch']} --single-branch")
+    os.system(f"docker build -t {title}:{repo['version']} {repo['name']}")
     os.system(f"rm {repo['name']} -rf")
     print(f"rebuild {title}")
     repo['log'] = "success rebuild"
