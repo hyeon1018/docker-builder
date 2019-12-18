@@ -80,6 +80,7 @@ def build(title, isNew=False):
     repo['version'] += 1
 
     cmd_list = [
+        ["gcloud", "auth", "print-access-token", "|", "docker", "login", "-u", "oauth2accesstoken" "--password-stdin" "https://asia.gcr.io"]
         ["rm", repo['name'], "-rf"],
         ["git", "clone", f"https://{repo['token']}{'@' if repo['token'] != '' else ''}github.com/{repo['owner']}/{repo['name']}", "-b", repo['branch'], "--single-branch"],
         ["docker", "build", "-t", f"{title}:{repo['version']}", repo['name']],
