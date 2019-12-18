@@ -5,7 +5,7 @@ import requests
 from flask import Flask, request
 from threading import Thread
 
-k8sinfra_url = ""
+k8sinfra_url = os.getenv('K8SINFRA_URL')
 
 app = Flask(__name__)
 
