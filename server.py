@@ -2,6 +2,7 @@ import os
 import json
 import subprocess
 from flask import Flask, request
+from threading import Thread
 
 app = Flask(__name__)
 
@@ -38,15 +39,16 @@ def add_repo():
         'version' : 0,
         'log' : ""
     }
-    
-    build(title)
+
+    thread = Thread(target=build, args=(title, ))
+    thread.daemon = True
+    thread.start()
 
     with open('repo.json', 'w') as json_file:
         json.dump(repo_data, json_file, indent=4)
 
-
     return {
-        'result' : "success"
+        'result' : "build start"
     }
 
 @app.route('/repo/<title>', methods=['GET'])
@@ -55,7 +57,9 @@ def view_repo_info(title):
 
 @app.route('/hook/<title>', methods=['POST'])
 def update_repo(title):
-    build(title)
+    thread = Thread(target=self.build, args=(title))
+    thread.daemon = True
+    thread.start()
     return "200"
 
 def build(title):
