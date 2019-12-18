@@ -57,7 +57,7 @@ def view_repo_info(title):
 
 @app.route('/hook/<title>', methods=['POST'])
 def update_repo(title):
-    thread = Thread(target=self.build, args=(title))
+    thread = Thread(target=build, args=(title, ))
     thread.daemon = True
     thread.start()
     return "200"
@@ -86,4 +86,4 @@ def build(title):
 
 #run dev server.
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5001)
+    app.run(debug=True, host="0.0.0.0", port=5000)
