@@ -1,5 +1,6 @@
 import os
 import json
+import subprocess
 from flask import Flask, request
 
 app = Flask(__name__)
@@ -34,7 +35,7 @@ def add_repo():
         'name' : repo_name,
         'token' : token,
         'branch' : branch,
-        'version' : 1,
+        'version' : 0,
         'log' : ""
     }
     
@@ -50,7 +51,7 @@ def add_repo():
 
 @app.route('/repo/<title>', methods=['GET'])
 def view_repo_info(title):
-    return "view repo information of " + title
+    return repo_data.get(title)
 
 @app.route('/hook/<title>', methods=['POST'])
 def update_repo(title):
@@ -59,12 +60,23 @@ def update_repo(title):
 
 def build(title):
     repo = repo_data.get(title)
+    repo['version'] += 1
 
-    os.system(f"git clone https://{repo['token']}{'@' if repo['token'] != '' else ''}github.com/{repo['owner']}/{repo['name']} -b {repo['branch']} --single-branch")
-    os.system(f"docker build -t {title}:{repo['version']} {repo['name']}")
-    os.system(f"rm {repo['name']} -rf")
-    print(f"rebuild {title}")
-    repo['log'] = "success rebuild"
+    cmd_list = [
+        ["rm", repo['name'], "-rf"],
+        ["git", "clone", f"https://{repo['token']}{'@' if repo['token'] != '' else ''}github.com/{repo['owner']}/{repo['name']}", "-b", repo['branch'], "--single-branch"],
+        ["docker", "build", "-t", f"{title}:{repo['version']}", repo['name']],
+        ["rm", repo['name'], "-rf"]
+    ]
+
+    for cmd in cmd_list :
+        print(cmd)
+        result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = result.communicate()
+        log = out.decode('utf-8') + err.decode('utf-8')
+        repo['log'] = log
+
+    repo['log'] = "Build Success."
     with open('repo.json', 'w') as json_file:
         json.dump(repo_data, json_file, indent=4)
 
