@@ -102,6 +102,20 @@ def build(title, isNew=False):
     with open('repo.json', 'w') as json_file:
         json.dump(repo_data, json_file, indent=4)
 
+    data = {
+            "project_name" : title
+            "image" : f"{title}:latest"
+            "ports" : [8080],
+            "envs" : None
+        }
+
+    if isNew :
+        resp = requests.post(f"{k8sinfra_url}/create", json=data)
+    else :
+        resp = requests.post(f"{k8sinfra_url}/update", json=data)
+    
+    print(resp.json())
+
 #run dev server.
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
