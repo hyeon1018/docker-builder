@@ -1,8 +1,11 @@
 import os
 import json
 import subprocess
+import requests
 from flask import Flask, request
 from threading import Thread
+
+k8sinfra_url = ""
 
 app = Flask(__name__)
 
@@ -37,10 +40,11 @@ def add_repo():
         'token' : token,
         'branch' : branch,
         'version' : 0,
-        'log' : ""
+        'status' : "",
+        'url' : ""
     }
 
-    thread = Thread(target=build, args=(title, ))
+    thread = Thread(target=build, args=(title, True))
     thread.daemon = True
     thread.start()
 
@@ -50,6 +54,15 @@ def add_repo():
     return {
         'result' : "build start"
     }
+
+@app.route('/repo/<title>', methods=['PUT'])
+def update_repo_info(title):
+    json_data = request.get_json(force=True)
+    repo = repo_data.get(title)
+    repo['status'] = json_data.get('status')
+    repo['url'] = json_data.get('url')
+    return "update";
+
 
 @app.route('/repo/<title>', methods=['GET'])
 def view_repo_info(title):
@@ -62,7 +75,7 @@ def update_repo(title):
     thread.start()
     return "200"
 
-def build(title):
+def build(title, isNew=False):
     repo = repo_data.get(title)
     repo['version'] += 1
 
@@ -77,13 +90,12 @@ def build(title):
     ]
 
     for cmd in cmd_list :
-        print(cmd)
         result = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = result.communicate()
         log = out.decode('utf-8') + err.decode('utf-8')
-        repo['log'] = log
+        repo['status'] = log
 
-    repo['log'] = "Build Success."
+    repo['status'] = "Build Success."
     with open('repo.json', 'w') as json_file:
         json.dump(repo_data, json_file, indent=4)
 
