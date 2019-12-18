@@ -70,6 +70,9 @@ def build(title):
         ["rm", repo['name'], "-rf"],
         ["git", "clone", f"https://{repo['token']}{'@' if repo['token'] != '' else ''}github.com/{repo['owner']}/{repo['name']}", "-b", repo['branch'], "--single-branch"],
         ["docker", "build", "-t", f"{title}:{repo['version']}", repo['name']],
+        ["docker", "tag" f"{title}:{repo['version']}", f"{title}:latest"]
+        ["docker", "tag" f"{title}:{repo['version']}", f"asia.gcr.io/k8stestinfra/{title}"]
+        ["docker", "push", f"asia.gcr.io/k8stestinfra/{title}"]
         ["rm", repo['name'], "-rf"]
     ]
 
