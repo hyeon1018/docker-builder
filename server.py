@@ -5,7 +5,11 @@ import requests
 from flask import Flask, request
 from threading import Thread
 
-k8sinfra_url = os.getenv('K8SINFRA_URL')
+k8sinfra_url = os.getenv('K8SINFRA_URL', "")
+
+gcloud_auth_key = os.getenv('GCLOUD_AUTH_KEY', "")
+gcloud_registry_host = os.getenv('GCLOUD_REGISTRY_HOST', "asia.gcr.io")
+gcloud_project_id = os.getenv('GCLOUD_PROJECT_ID', "")
 
 app = Flask(__name__)
 
@@ -82,13 +86,13 @@ def build(title, isNew=False):
     repo['version'] += 1
 
     cmd_list = [
-        ["gcloud", "auth", "print-access-token", "|", "docker", "login", "-u", "oauth2accesstoken" "--password-stdin" "https://asia.gcr.io"],
+        ["docker", "login", "-u", "_json_key", "-p", gcloud_auth_key, f"https://{gcloud_registry_host}"],
         ["rm", repo['name'], "-rf"],
         ["git", "clone", f"https://{repo['token']}{'@' if repo['token'] != '' else ''}github.com/{repo['owner']}/{repo['name']}", "-b", repo['branch'], "--single-branch"],
         ["docker", "build", "-t", f"{title}:{repo['version']}", repo['name']],
         ["docker", "tag", f"{title}:{repo['version']}", f"{title}:latest"],
-        ["docker", "tag", f"{title}:{repo['version']}", f"asia.gcr.io/k8stestinfra/{title}"],
-        ["docker", "push", f"asia.gcr.io/k8stestinfra/{title}"],
+        ["docker", "tag", f"{title}:{repo['version']}", f"{gcloud_registry_host}/{gcloud_project_id}/{title}"],
+        ["docker", "push", f"{gcloud_registry_host}/{gcloud_project_id}/{title}"],
         ["rm", repo['name'], "-rf"]
     ]
 
@@ -103,19 +107,22 @@ def build(title, isNew=False):
         json.dump(repo_data, json_file, indent=4)
 
     data = {
-            "project_name" : title
-            "image" : f"{title}:latest"
+            "project_name" : title,
+            "image" : f"{title}:latest",
             "ports" : [8080],
             "envs" : None
         }
+    print(data)
 
-    if isNew :
-        resp = requests.post(f"{k8sinfra_url}/create", json=data)
-    else :
-        resp = requests.post(f"{k8sinfra_url}/update", json=data)
-    
-    print(resp.json())
+    try:
+        if isNew :
+            resp = requests.post(f"{k8sinfra_url}/create", json=data)
+        else :
+            resp = requests.post(f"{k8sinfra_url}/update", json=data)
+        repo['status'] = resp.json().get("status", "")
+    except:
+        repo['status'] = "kubernetes server error"
 
 #run dev server.
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=8080)

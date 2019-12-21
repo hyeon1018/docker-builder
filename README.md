@@ -2,6 +2,9 @@
 
 ## ENV
 * K8SINFRA_URL : kubernetes infra server address.
+* GCLOUD_AUTH_KEY : gcloud account json key.
+* GCLOUD_REGISTRY_HOST : gcloud registry host url (default : asia.gcr.io)
+* GCLOUD_PROJECT_ID : gcloud project id for registrty
 
 ## API
 | URI | METHOD | Description |
